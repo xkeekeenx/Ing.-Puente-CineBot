@@ -33,7 +33,6 @@ def verify_webhook():
 
 @app.route("/webhook", methods=["POST"])
 def receive_message():
-    # Meta requiere un OK inmediato para evitar reintentos fallidos
     try:
         data = request.get_json()
         print("MENSAJE RECIBIDO DE META:", data)

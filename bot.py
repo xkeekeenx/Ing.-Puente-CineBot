@@ -64,7 +64,7 @@ def webhook():
         return jsonify({"status": "success"}), 200
     except Exception as e:
         print(f"Error procesando mensaje: {e}")
-        return jsonify({"status": "error"}}, 500
+        return jsonify({"status": "error"}), 500
 
 def consultar_gemini_texto(texto):
     model = genai.GenerativeModel(

@@ -1,10 +1,42 @@
+import os
+import requests
+from flask import Flask, request, jsonify
+from google import genai
+
+app = Flask(__name__)
+
+# Configuración de credenciales desde las variables de entorno de Render
+VERIFY_TOKEN = os.environ.get("VERIFY_TOKEN", "cinebot123")
+WHATSAPP_TOKEN = os.environ.get("WHATSAPP_TOKEN")
+PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Inicializar el cliente de Gemini (Google GenAI)
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+@app.route("/", methods=["GET"])
+def home():
+    return "CineBot para Monterrey está activo y funcionando correctamente.", 200
+
+@app.route("/webhook", methods=["GET"])
+def verify_webhook():
+    mode = request.args.get("hub.mode")
+    token = request.args.get("hub.verify_token")
+    challenge = request.args.get("hub.challenge")
+
+    if mode and token:
+        if mode == "subscribe" and token == VERIFY_TOKEN:
+            return challenge, 200
+        else:
+            return jsonify({"error": "Token inválido"}), 403
+    return jsonify({"error": "Solicitud inválida"}), 400
+
 @app.route("/webhook", methods=["POST"])
 def receive_message():
     data = request.get_json()
-    print("MENSAJE RECIBIDO DE META:", data)  # <-- Añade esta línea aquí
+    print("MENSAJE RECIBIDO DE META:", data)
     
     try:
-        # Extraer el mensaje entrante de WhatsApp
         if "entry" in data:
             for entry in data["entry"]:
                 for change in entry.get("changes", []):
@@ -52,3 +84,6 @@ def receive_message():
     except Exception as e:
         print(f"Error procesando mensaje: {e}")
         return jsonify({"status": "error"}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
